@@ -62,7 +62,7 @@ export async function createVirtualClone(formData: {
     return uuid;
 }
 
-export async function addVoice(file: File, voiceName: string): Promise<string> {
+async function addVoice(file: File, voiceName: string): Promise<string> {
     console.log("Adding new voice...")
 
     const apiKey = process.env.XI_API_KEY
@@ -93,7 +93,7 @@ export async function addVoice(file: File, voiceName: string): Promise<string> {
 // Example usage:
 // const voiceId = await addVoice(fileObject, "Custom Voice Name");
 
-export async function createAgent(prompt: string, first_message: string, internal_name: string, language: string = "en") {
+async function createAgent(prompt: string, first_message: string, internal_name: string, language: string = "en") {
     console.log("Adding new agent...")
 
     const apiKey = process.env.XI_API_KEY
