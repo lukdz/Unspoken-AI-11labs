@@ -22,6 +22,19 @@ pnpm dev
 bun dev
 ```
 
+
+## Docker
+
+```bash
+i=node:hydrogen-alpine3.21
+docker pull $i
+docker run -v $PWD:/app -it --rm $i sh
+cd /app
+npm i
+npm run dev
+# - Network: <IP>
+```
+
 ## Learn More
 
 - [Conversational AI Tutorial](https://elevenlabs.io/docs/product/introduction)
