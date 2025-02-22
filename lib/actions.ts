@@ -37,21 +37,25 @@ export async function createVirtualClone(formData: {
     }
 
     const person_name = formData.name;
-    const voiceID = await addVoice(formData.file, person_name);
+    
+    // Start voice creation early and let it run in parallel
+    const voiceIDPromise = addVoice(formData.file, person_name);
 
-    const extratedData = await openaiCompletion(style_extractor_agent_prompt, formData.description);
-    const prompt = await openaiCompletion(conversational_ai_prompt_generator, extratedData);
-    const system_prompt = final_11labs_prompt.replaceAll('{person_name}', person_name).replaceAll('{prompt}', prompt)
-    const agent_id = await createAgent(system_prompt, `Hello, I am ${person_name}. It's really nice to see you again!`, person_name);
-
+    // Run the OpenAI operations sequentially since they depend on each other
+    const extractedData = await openaiCompletion(style_extractor_agent_prompt, formData.description);
+    const prompt = await openaiCompletion(conversational_ai_prompt_generator, extractedData);
+    const system_prompt = final_11labs_prompt.replaceAll('{person_name}', person_name).replaceAll('{prompt}', prompt);
+    
+    // Wait for both voice creation and agent creation to complete
+    const voice_id = await voiceIDPromise;
+    const agent_id = await createAgent(system_prompt, `Hello, I am ${person_name}. It's really nice to see you again!`, voice_id, person_name);
 
     const uuid = crypto.randomUUID();
-
     console.log("Finished crafting persona ", uuid);
 
     const persona: Omit<Persona, 'created_at'> = {
         id: uuid,
-        voice_id: voiceID,
+        voice_id: voice_id,
         person_name: person_name,
         source_text: formData.description,
         system_prompt: system_prompt,
@@ -93,7 +97,7 @@ async function addVoice(file: File, voiceName: string): Promise<string> {
 // Example usage:
 // const voiceId = await addVoice(fileObject, "Custom Voice Name");
 
-async function createAgent(prompt: string, first_message: string, internal_name: string, language: string = "en") {
+async function createAgent(prompt: string, first_message: string, voice_id: string, internal_name: string, language: string = "en") {
     console.log("Adding new agent...")
 
     const apiKey = process.env.XI_API_KEY
@@ -114,6 +118,9 @@ async function createAgent(prompt: string, first_message: string, internal_name:
                 },
                 first_message: first_message,
                 language: language
+            },
+            tts: {
+                voice_id: voice_id
             }
         },
         name: internal_name
