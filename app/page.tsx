@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { createVirtualClone } from '../lib/actions';
 import { useRouter } from 'next/navigation';
-import { getPersona } from '@/lib/database';
 
 const MAX_FILE_SIZE_MB = 20;
 
@@ -53,7 +52,7 @@ export default function Home() {
                 </h3>
                 <div className="w-full relative">
                     <p className="mb-2 text-gray-700">What's the name of the person?</p>
-                    <input 
+                    <input
                         type="text" 
                         placeholder="Enter clone name"
                         className={`w-full p-2 border rounded-md ${errors.name ? 'border-red-500' : ''}`}
@@ -64,7 +63,7 @@ export default function Home() {
                 </div>
                 <div className="w-full relative">
                     <p className="mb-2 text-gray-700">Enter that person's diary, journal or autobiography.</p>
-                    <textarea 
+                    <textarea
                         placeholder="Enter detailed description"
                         className={`w-full h-48 p-2 border rounded-md resize-y overflow-auto ${errors.description ? 'border-red-500' : ''}`}
                         value={description}

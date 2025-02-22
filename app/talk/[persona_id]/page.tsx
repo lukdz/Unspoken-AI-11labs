@@ -2,7 +2,7 @@ import { ConvAI } from "@/components/ConvAI";
 import { getPersona } from "@/lib/database";
 import { Persona } from "@/lib/types";
 
-export default async function Home({ params }: { params: { persona_id: string } }) {
+export default async function Home({ params }: { params: Promise<{ persona_id: string }> }) {
     const { persona_id } = await params;
     let persona: Persona | null;
     try {
