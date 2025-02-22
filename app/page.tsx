@@ -8,23 +8,23 @@ const MAX_FILE_SIZE_MB = 20;
 
 export default function Home() {
     const router = useRouter();
-    const [title, setTitle] = useState('');
+    const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [file, setFile] = useState<File | null>(null);
-    const [errors, setErrors] = useState({ title: false, description: false, file: false });
+    const [errors, setErrors] = useState({ name: false, description: false, file: false });
     const [sizeError, setSizeError] = useState(false);
 
     const handleSubmit = async () => {
         setSizeError(false);
 
         const newErrors = {
-            title: !title,
+            name: !name,
             description: !description,
             file: !file
         };
         setErrors(newErrors);
 
-        if (!title || !description || !file) {
+        if (!name || !description || !file) {
             return;
         }
 
@@ -35,7 +35,7 @@ export default function Home() {
         }
 
         const cloneId = await createVirtualClone({
-            title,
+            name,
             description,
             file
         });
@@ -54,12 +54,12 @@ export default function Home() {
                     <p className="mb-2 text-gray-700">What's the name of the person?</p>
                     <input 
                         type="text" 
-                        placeholder="Enter clone title"
-                        className={`w-full p-2 border rounded-md ${errors.title ? 'border-red-500' : ''}`}
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Enter clone name"
+                        className={`w-full p-2 border rounded-md ${errors.name ? 'border-red-500' : ''}`}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                     />
-                    {errors.title && <div className="text-red-500 text-sm mt-1">Please fill this field</div>}
+                    {errors.name && <div className="text-red-500 text-sm mt-1">Please fill this field</div>}
                 </div>
                 <div className="w-full relative">
                     <p className="mb-2 text-gray-700">Enter that person's diary, journal or autobiography.</p>
@@ -90,7 +90,7 @@ export default function Home() {
                     className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition-colors"
                     onClick={handleSubmit}
                 >
-                    {title ? `Bring ${title} to life!` : "Bring the person to life!"}
+                    {name ? `Bring ${name} to life!` : "Bring the person to life!"}
                 </button>
             </div>
         </div>
