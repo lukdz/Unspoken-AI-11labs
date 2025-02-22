@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function RootLayout({children}: Readonly<{ children: React.ReactNode }>) {
     return (
         <html lang="en" className={"h-full w-full"}>
-        <body className={`antialiased w-full h-full lex flex-col`}>
+        <body className={`antialiased w-full h-full flex flex-col`}>
         <div className="flex flex-col flex-grow w-full items-center justify-center sm:px-4">
             <nav
                 className={
@@ -20,27 +20,13 @@ export default function RootLayout({children}: Readonly<{ children: React.ReactN
             >
                 <div className={"flex"}>
                     <Link href={"/"} prefetch={true}>
-                        <ElevenLabsLogo
-                            className={"h-[15px] w-auto hover:text-gray-500"}
-                        />
-                    </Link>
-                </div>
-
-                <div className={"flex gap-4 justify-end"}>
-                    <Link
-                        href="https://github.com/jonatanvm/convai-demo"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={"py-0.5"}
-                        aria-label="View source on GitHub"
-                    >
-                        <GithubLogo
-                            className={"w-5 h-5 hover:text-gray-500 text-[#24292f]"}
-                        />
+                        <p className="text-lg font-bold">Unspoken AI</p>
                     </Link>
                 </div>
             </nav>
-            {children}
+            <div className="flex items-center mx-auto">
+                {children}
+            </div>
             <BackgroundWave/>
         </div>
         </body>
