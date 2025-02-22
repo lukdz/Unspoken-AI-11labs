@@ -64,6 +64,11 @@ export async function addVoice(file: File, voiceName: string): Promise<string> {
             name: voiceName,
             remove_background_noise: true
         });
+        await client.voices.editSettings(response.voice_id, {
+            stability: 0.1,
+            similarity_boost: 0.9,
+            style: 0.2
+        });
         return response.voice_id;
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -73,3 +78,23 @@ export async function addVoice(file: File, voiceName: string): Promise<string> {
 
 // Example usage:
 // const voiceId = await addVoice(fileObject, "Custom Voice Name");
+
+export async function createAgent(prompt: string, first_message: string = "", language: string = "en") {
+    console.log("Adding new agent...")
+
+    const apiKey = process.env.XI_API_KEY
+    if (!apiKey) {
+        throw Error('XI_API_KEY is not set')
+    }
+
+    const client = new ElevenLabsClient({ apiKey: apiKey });
+    await client.conversationalAi.createAgent({
+        conversation_config: {
+            agent: {
+                prompt: prompt,
+                first_message: first_message,
+                language: language
+            }
+        }
+    });
+}
