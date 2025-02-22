@@ -2,6 +2,7 @@
 
 import OpenAI from "openai";
 import { conversational_ai_prompt_generator, final_11labs_prompt, style_extractor_agent_prompt } from "./prompts";
+import { ElevenLabsClient } from "elevenlabs";
 
 const openai = new OpenAI();
 
@@ -28,9 +29,47 @@ export async function createVirtualClone(formData: {
     description: string;
     file: File;
 }) {
+    if (!formData.file) {
+        console.error("Cannot create voice - no file provided")
+        return;
+    }
+
+    const voiceID = await addVoice(formData.file, formData.name);
+
     const extratedData = await openaiCompletion(style_extractor_agent_prompt, formData.description);
     const prompt = await openaiCompletion(conversational_ai_prompt_generator, extratedData);
     const final_prompt = final_11labs_prompt.replaceAll('{person_name}', formData.name).replaceAll('{prompt}', prompt)
+
+    const uuid = crypto.randomUUID();
+
+    console.log("Finished crafting persona ", uuid);
+    console.log(voiceID);
     console.log(final_prompt);
-    return '12314532453425'; // Temporary ID, to be changed later
+    return uuid; // Temporary ID, to be changed later
 }
+
+export async function addVoice(file: File, voiceName: string): Promise<string> {
+    console.log("Adding new voice...")
+
+    const apiKey = process.env.XI_API_KEY
+    if (!apiKey) {
+        throw Error('XI_API_KEY is not set')
+    }
+
+    const client = new ElevenLabsClient({ apiKey: apiKey });
+    
+    try {
+        const response = await client.voices.add({
+            files: [file],
+            name: voiceName,
+            remove_background_noise: true
+        });
+        return response.voice_id;
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        throw new Error(`Failed to add voice: ${errorMessage}`);
+    }
+}
+
+// Example usage:
+// const voiceId = await addVoice(fileObject, "Custom Voice Name");

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react';
-import { createVirtualClone } from '../lib/actions';
+import { addVoice, createVirtualClone } from '../lib/actions';
 import { useRouter } from 'next/navigation';
 
 const MAX_FILE_SIZE_MB = 20;
