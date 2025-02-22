@@ -20,7 +20,7 @@ async function openaiCompletion(prompt: string, userMessage: string): Promise<st
                 role: "user",
                 content: userMessage
             }
-        ],
+        ]
     });
 
     return completion.choices[0].message.content || "Failed to run AI completion";
