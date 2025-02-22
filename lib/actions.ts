@@ -1,6 +1,7 @@
 'use server'
 
 import OpenAI from "openai";
+import { PostHog } from 'posthog-node';
 import { conversational_ai_prompt_generator, final_11labs_prompt, style_extractor_agent_prompt } from "./prompts";
 import { ElevenLabsClient } from "elevenlabs";
 import { addPersona } from "./database";
@@ -8,22 +9,61 @@ import { Persona } from "./types";
 
 const openai = new OpenAI();
 
-async function openaiCompletion(prompt: string, userMessage: string): Promise<string> {
-    const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-            { 
-                role: "system", 
-                content: prompt
-            },
-            {
-                role: "user",
-                content: userMessage
-            }
-        ],
-    });
+const posthog = new PostHog(
+    'phc_P0zmNW1JeorIbK4AMcUts2c3H1ZsozsRxKvZcYnklL5',
+    { host: 'https://eu.i.posthog.com' }
+);
 
-    return completion.choices[0].message.content || "Failed to run AI completion";
+async function openaiCompletion(prompt: string, userMessage: string): Promise<string> {
+    const startTime = Date.now();
+    let status = 200;
+    let completion;
+    
+    try {
+        completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { 
+                    role: "system", 
+                    content: prompt
+                },
+                {
+                    role: "user",
+                    content: userMessage
+                }
+            ],
+        });
+
+        const latency = (Date.now() - startTime) / 1000;
+        
+        // Log the AI generation event
+        posthog.capture({
+            distinctId: 'system', // You might want to pass actual user ID here
+            event: '$ai_generation',
+            properties: {
+                $ai_trace_id: completion.id,
+                $ai_model: "gpt-4o-mini",
+                $ai_provider: "openai",
+                $ai_input: JSON.stringify([
+                    { role: "system", content: prompt },
+                    { role: "user", content: userMessage }
+                ]),
+                $ai_input_tokens: completion.usage?.prompt_tokens,
+                $ai_output_choices: JSON.stringify(completion.choices),
+                $ai_output_tokens: completion.usage?.completion_tokens,
+                $ai_latency: latency,
+                $ai_http_status: status,
+                $ai_base_url: "https://api.openai.com/v1"
+            },
+        });
+
+        // Make sure to flush the event
+        await posthog.flush();
+        
+        return completion.choices[0].message.content || "Failed to run AI completion";
+    } catch (error) {
+        throw error;
+    }
 }
 
 export async function createVirtualClone(formData: {

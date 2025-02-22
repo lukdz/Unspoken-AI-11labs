@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import "./globals.css";
 import {BackgroundWave} from "@/components/background-wave";
 import Link from "next/link";
+import { AnalyticsProvider } from '@/components/providers/analytics-provider'
 
 export const metadata: Metadata = {
     title: "Memoria AI",
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 export default function RootLayout({children}: Readonly<{ children: React.ReactNode }>) {
     return (
         <html lang="en" className={"h-full w-full"}>
-        <body className={`antialiased w-full h-full flex flex-col`}>
+        <AnalyticsProvider>
         <div className="flex flex-col flex-grow w-full items-center justify-center sm:px-4">
             <nav
                 className={
@@ -28,6 +29,7 @@ export default function RootLayout({children}: Readonly<{ children: React.ReactN
             </div>
             <BackgroundWave/>
         </div>
+        </AnalyticsProvider>
         </body>
         </html>
     );
