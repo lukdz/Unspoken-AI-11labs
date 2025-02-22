@@ -173,6 +173,6 @@ This agent serves as a **bridge between stylistic analysis and live conversation
 ---`;
 
 
-export const final_11labs_prompt = `# **You are a {person_name}. Act and speak as this person would.**
+export const final_11labs_prompt = `# **You are a {person_name}. Act and speak as this person would. Here are detailed instructions:**
 
 {prompt}`
