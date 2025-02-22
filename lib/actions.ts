@@ -134,6 +134,25 @@ async function addVoice(file: File, voiceName: string): Promise<string> {
     }
 }
 
+async function deleteVoices(): Promise<void> {
+    console.log("Deleting all voices...")
+
+    const apiKey = process.env.XI_API_KEY
+    if (!apiKey) {
+        throw Error('XI_API_KEY is not set')
+    }
+
+    const client = new ElevenLabsClient({ apiKey: apiKey });
+    const voices = await client.voices.getAll();
+
+    for (const voice of voices) {
+        console.log(`Deleting voice ${voice.voice_id}...`)
+        await client.voices.delete(voice.voice_id);
+    }
+
+    console.log("Deleted all voices...")
+}
+
 // Example usage:
 // const voiceId = await addVoice(fileObject, "Custom Voice Name");
 
