@@ -35,6 +35,15 @@ npm run dev
 # - Network: <IP>
 ```
 
+## Technologies used
+
+- ElevenLabs (Conversational AI, Voice Cloning)
+- Next.js
+- Vercel
+- Supabase
+- OpenAI
+- Tailwind CSS
+
 ## Learn More
 
 - [Conversational AI Tutorial](https://elevenlabs.io/docs/product/introduction)
