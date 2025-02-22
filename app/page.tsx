@@ -47,7 +47,7 @@ export default function Home() {
     return (
         <div className="w-full items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
             <div className="w-[41vw] flex flex-col gap-8 row-start-2 items-center bg-gray-300 p-8 rounded-xl">
-                <h1 className="text-4xl font-bold">Memoria AI</h1>
+                <h1 className="text-4xl font-bold">Unspoken AI</h1>
                 <h3 className="w-full text-gray-600 text-xl text-center">
                     Bring back your predecessors to life with our amazing AI virtual persona clones!
                 </h3>

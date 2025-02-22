@@ -7,6 +7,7 @@ import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {Conversation} from "@11labs/client";
 import {cn} from "@/lib/utils";
 import { getSignedUrl } from "@/lib/actions";
+import { Persona } from "@/lib/types";
 
 async function requestMicrophonePermission() {
     try {
@@ -18,7 +19,7 @@ async function requestMicrophonePermission() {
     }
 }
 
-export function ConvAI({ agent_id }: { agent_id: string }) {
+export function ConvAI({ persona }: { persona: Persona }) {
     const [conversation, setConversation] = useState<Conversation | null>(null)
     const [isConnected, setIsConnected] = useState(false)
     const [isSpeaking, setIsSpeaking] = useState(false)
@@ -29,7 +30,7 @@ export function ConvAI({ agent_id }: { agent_id: string }) {
             alert("No permission")
             return;
         }
-        const signedUrl = await getSignedUrl(agent_id)
+        const signedUrl = await getSignedUrl(persona.agent_id)
         const conversation = await Conversation.startSession({
             signedUrl: signedUrl,
             onConnect: () => {
@@ -60,7 +61,8 @@ export function ConvAI({ agent_id }: { agent_id: string }) {
     }
 
     return (
-        <div className={"flex justify-center items-center gap-x-4"}>
+        <div className={"flex justify-center items-center gap-x-4 flex-col"}>
+            <h1 className={'text-3xl font-bold p-10'}>Talk to {persona.person_name}</h1>
             <Card className={'rounded-3xl'}>
                 <CardContent>
                     <CardHeader>
