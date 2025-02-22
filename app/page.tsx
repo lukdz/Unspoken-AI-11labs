@@ -13,6 +13,7 @@ export default function Home() {
     const [file, setFile] = useState<File | null>(null);
     const [errors, setErrors] = useState({ name: false, description: false, file: false });
     const [sizeError, setSizeError] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = async () => {
         setSizeError(false);
@@ -34,17 +35,27 @@ export default function Home() {
             return;
         }
 
+        setLoading(true);
         const cloneId = await createVirtualClone({
             name,
             description,
             file
         });
+        setLoading(false);
 
         router.push(`/talk/${cloneId}`);
     };
 
     return (
         <div className="w-full items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+            {loading && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg flex items-center gap-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                        <span className="text-gray-700">Creating the person...</span>
+                    </div>
+                </div>
+            )}
             <div className="w-[41vw] flex flex-col gap-8 row-start-2 items-center bg-gray-300 p-8 rounded-xl">
                 <h1 className="text-4xl font-bold">Unspoken AI</h1>
                 <h3 className="w-full text-gray-600 text-xl text-center">
