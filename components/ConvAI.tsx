@@ -6,6 +6,7 @@ import {useState} from "react";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {Conversation} from "@11labs/client";
 import {cn} from "@/lib/utils";
+import { getSignedUrl } from "@/lib/actions";
 
 async function requestMicrophonePermission() {
     try {
@@ -17,16 +18,7 @@ async function requestMicrophonePermission() {
     }
 }
 
-async function getSignedUrl(): Promise<string> {
-    const response = await fetch('/api/signed-url')
-    if (!response.ok) {
-        throw Error('Failed to get signed url')
-    }
-    const data = await response.json()
-    return data.signedUrl
-}
-
-export function ConvAI() {
+export function ConvAI({ agent_id }: { agent_id: string }) {
     const [conversation, setConversation] = useState<Conversation | null>(null)
     const [isConnected, setIsConnected] = useState(false)
     const [isSpeaking, setIsSpeaking] = useState(false)
@@ -37,7 +29,7 @@ export function ConvAI() {
             alert("No permission")
             return;
         }
-        const signedUrl = await getSignedUrl()
+        const signedUrl = await getSignedUrl(agent_id)
         const conversation = await Conversation.startSession({
             signedUrl: signedUrl,
             onConnect: () => {
