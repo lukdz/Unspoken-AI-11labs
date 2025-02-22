@@ -5,7 +5,7 @@ import Link from "next/link";
 import {ElevenLabsLogo, GithubLogo} from "@/components/logos";
 
 export const metadata: Metadata = {
-    title: "ConvAI",
+    title: "Memoria AI",
 };
 
 export default function RootLayout({children}: Readonly<{ children: React.ReactNode }>) {
