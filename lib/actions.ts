@@ -16,7 +16,7 @@ const posthog = new PostHog(
 
 async function openaiCompletion(prompt: string, userMessage: string): Promise<string> {
     const startTime = Date.now();
-    let status = 200;
+    const status = 200;
     let completion;
     
     try {
