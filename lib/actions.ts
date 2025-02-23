@@ -148,6 +148,8 @@ async function deleteVoices(): Promise<void> {
     const client = new ElevenLabsClient({ apiKey: apiKey });
     const voices = await client.voices.getAll();
 
+    console.log(`Current voice count: ${voices.voices.length}`);
+
     if (voices.voices.length > 25) {
         // Find the oldest voice based on created_at_unix
         const oldestVoice = voices.voices.reduce((oldest, current) => {
@@ -159,8 +161,9 @@ async function deleteVoices(): Promise<void> {
         console.log(`Deleting oldest voice ${oldestVoice.voice_id} (${oldestVoice.name})...`);
         await client.voices.delete(oldestVoice.voice_id);
         console.log("Deleted oldest voice.");
+        console.log(`Updated voice count: ${voices.voices.length - 1}`);
     } else {
-        console.log(`Current voice count (${voices.voices.length}) is within limit.`);
+        console.log("No deletion needed - voice count is within limit.");
     }
 }
 
