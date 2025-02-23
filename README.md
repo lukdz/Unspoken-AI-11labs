@@ -32,6 +32,7 @@ docker run -v $PWD:/app -it --rm $i sh
 cd /app
 npm i
 npm run dev
+# npm run build
 # - Network: <IP>
 ```
 
