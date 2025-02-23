@@ -3,9 +3,9 @@
 import posthog from '@/lib/posthog'
 import { PostHogProvider } from 'posthog-js/react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 
-export function PostHogPageview(): JSX.Element {
+function PageviewTracker(): JSX.Element {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -22,6 +22,14 @@ export function PostHogPageview(): JSX.Element {
   }, [pathname, searchParams])
 
   return <></>
+}
+
+export function PostHogPageview(): JSX.Element {
+  return (
+    <Suspense fallback={null}>
+      <PageviewTracker />
+    </Suspense>
+  )
 }
 
 export function AnalyticsProvider({
