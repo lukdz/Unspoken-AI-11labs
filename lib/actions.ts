@@ -107,6 +107,9 @@ export async function createVirtualClone(formData: {
 }
 
 async function addVoice(file: File, voiceName: string): Promise<string> {
+
+    deleteVoices();
+    
     console.log("Adding new voice...")
 
     const apiKey = process.env.XI_API_KEY
@@ -135,7 +138,7 @@ async function addVoice(file: File, voiceName: string): Promise<string> {
 }
 
 async function deleteVoices(): Promise<void> {
-    console.log("Deleting all voices...")
+    console.log("Checking voice count...")
 
     const apiKey = process.env.XI_API_KEY
     if (!apiKey) {
@@ -145,12 +148,20 @@ async function deleteVoices(): Promise<void> {
     const client = new ElevenLabsClient({ apiKey: apiKey });
     const voices = await client.voices.getAll();
 
-    for (const voice of voices) {
-        console.log(`Deleting voice ${voice.voice_id}...`)
-        await client.voices.delete(voice.voice_id);
-    }
+    if (voices.voices.length > 25) {
+        // Find the oldest voice based on created_at_unix
+        const oldestVoice = voices.voices.reduce((oldest, current) => {
+            const oldestTime = oldest.created_at_unix ?? Number.MAX_VALUE;
+            const currentTime = current.created_at_unix ?? Number.MAX_VALUE;
+            return currentTime < oldestTime ? current : oldest;
+        });
 
-    console.log("Deleted all voices...")
+        console.log(`Deleting oldest voice ${oldestVoice.voice_id} (${oldestVoice.name})...`);
+        await client.voices.delete(oldestVoice.voice_id);
+        console.log("Deleted oldest voice.");
+    } else {
+        console.log(`Current voice count (${voices.voices.length}) is within limit.`);
+    }
 }
 
 // Example usage:
