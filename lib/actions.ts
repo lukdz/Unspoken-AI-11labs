@@ -98,36 +98,37 @@ export async function createVirtualClone(formData: {
     // Start voice creation early and let it run in parallel
     const voiceIDPromise = addVoice(formData.file, person_name);
 
+    const recognized_language = await openaiCompletion(detect_if_language_is_english_prompt, formData.description);
+
     let style_extractor_prompt = style_extractor_agent_prompt.replaceAll('{person_name}', person_name);
-    let conv_ai_prompt_gen_prompt = conversational_ai_prompt_generator;
-    let final_prompt = final_11labs_prompt.replaceAll('{person_name}', person_name);
+    //let conv_ai_prompt_gen_prompt = conversational_ai_prompt_generator;
+    let final_prompt = final_11labs_prompt.replaceAll('{person_name}', person_name).replaceAll('{language}', recognized_language);
     let init_message = `Hello, I am ${person_name}. It's really nice to see you again!`;
 
-    const recognized_language = await openaiCompletion(detect_if_language_is_english_prompt, formData.description);
     const languageCode = convertToLanguageCode(recognized_language);
     
     if (languageCode !== 'en') {
         console.log(`Recognized non english language (${recognized_language} -> ${languageCode}), translating texts...`)
 
         const tr_prompt = translate_prompt.replaceAll("{language}", recognized_language);
-        [style_extractor_prompt, conv_ai_prompt_gen_prompt, final_prompt, init_message] = await Promise.all([
+        [style_extractor_prompt, init_message] = await Promise.all([
             openaiCompletion(tr_prompt, style_extractor_prompt),
-            openaiCompletion(tr_prompt, conv_ai_prompt_gen_prompt),
-            openaiCompletion(tr_prompt, final_prompt),
+            //openaiCompletion(tr_prompt, conv_ai_prompt_gen_prompt),
+            // openaiCompletion(tr_prompt, final_prompt),
             openaiCompletion(tr_prompt, init_message)
         ]);
 
         console.log(`\n\nTranslated text:${style_extractor_prompt}`)
-        console.log(`\n\nTranslated text:${conv_ai_prompt_gen_prompt}`)
+        //console.log(`\n\nTranslated text:${conv_ai_prompt_gen_prompt}`)
         console.log(`\n\nTranslated text:${final_prompt}`)
         console.log(`\n\nTranslated text:${init_message}`)
     }
 
     // Run the OpenAI operations sequentially since they depend on each other
     const extractedData = await openaiCompletion(style_extractor_prompt, formData.description);
-    const prompt = await openaiCompletion(conv_ai_prompt_gen_prompt, extractedData);
+    //const prompt = await openaiCompletion(conv_ai_prompt_gen_prompt, extractedData);
     
-    const system_prompt = `${final_prompt}\n${prompt}`;
+    const system_prompt = `${final_prompt}\n${extractedData}`;
 
     // Wait for both voice creation and agent creation to complete
     const voice_id = await voiceIDPromise;//'0JYdul3VlZWMx8Zex8L4';//

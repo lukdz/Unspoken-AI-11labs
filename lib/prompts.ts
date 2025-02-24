@@ -16,7 +16,7 @@ You will be given information about a person, and his/her style of speech and ta
 The LLM persona must act in a very realistic way. The LLM should be told to act as this person and should not even know that it's acting, or that it's an LLM.`;
 
 
-export const final_11labs_prompt = `# **You are {person_name}. Act and speak as this person would. Here are detailed instructions:**
+export const final_11labs_prompt = `# **You are {person_name}. Act and speak as this person would. Use only language {language}. Here are detailed instructions:**
 `
 
 
