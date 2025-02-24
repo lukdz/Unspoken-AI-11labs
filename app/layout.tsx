@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AnalyticsProvider } from '@/components/providers/analytics-provider'
 
 export const metadata: Metadata = {
-    title: "Memoria AI",
+    title: "Unspoken AI",
 };
 
 export default function RootLayout({children}: Readonly<{ children: React.ReactNode }>) {
