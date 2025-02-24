@@ -11,7 +11,15 @@ export default function Home() {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [file, setFile] = useState<File | null>(null);
-    const [errors, setErrors] = useState({ name: false, description: false, file: false });
+    const [elevenLabsKey, setElevenLabsKey] = useState('');
+    const [openAiKey, setOpenAiKey] = useState('');
+    const [errors, setErrors] = useState({ 
+        name: false, 
+        description: false, 
+        file: false,
+        elevenLabsKey: false,
+        openAiKey: false 
+    });
     const [sizeError, setSizeError] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -21,11 +29,13 @@ export default function Home() {
         const newErrors = {
             name: !name,
             description: !description,
-            file: !file
+            file: !file,
+            elevenLabsKey: !elevenLabsKey,
+            openAiKey: !openAiKey
         };
         setErrors(newErrors);
 
-        if (!name || !description || !file) {
+        if (!name || !description || !file || !elevenLabsKey || !openAiKey) {
             return;
         }
 
@@ -39,7 +49,9 @@ export default function Home() {
         const cloneId = await createVirtualClone({
             name,
             description,
-            file
+            file,
+            elevenLabsKey,
+            openAiKey
         });
         setLoading(false);
 
@@ -98,6 +110,28 @@ export default function Home() {
                     />
                     {errors.file && <div className="text-red-500 text-sm mt-1">Please input mp3 file of the voice</div>}
                     {sizeError && <div className="text-red-500 text-sm mt-1">File size must be less than 20MB</div>}
+                </div>
+                <div className="w-full relative">
+                    <p className="mb-2 text-gray-700">ElevenLabs API Key</p>
+                    <input
+                        type="password" 
+                        placeholder="Enter your ElevenLabs API key"
+                        className={`w-full p-2 border rounded-md ${errors.elevenLabsKey ? 'border-red-500' : ''}`}
+                        value={elevenLabsKey}
+                        onChange={(e) => setElevenLabsKey(e.target.value)}
+                    />
+                    {errors.elevenLabsKey && <div className="text-red-500 text-sm mt-1">Please enter your ElevenLabs API key</div>}
+                </div>
+                <div className="w-full relative">
+                    <p className="mb-2 text-gray-700">OpenAI API Key</p>
+                    <input
+                        type="password"
+                        placeholder="Enter your OpenAI API key"
+                        className={`w-full p-2 border rounded-md ${errors.openAiKey ? 'border-red-500' : ''}`}
+                        value={openAiKey}
+                        onChange={(e) => setOpenAiKey(e.target.value)}
+                    />
+                    {errors.openAiKey && <div className="text-red-500 text-sm mt-1">Please enter your OpenAI API key</div>}
                 </div>
                 <p className="text-gray-400 text-sm">By clicking the button you agree that you have sole rights to the audio file and the text provided.</p>
                 <button 

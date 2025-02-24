@@ -2,20 +2,19 @@
 
 import OpenAI from "openai";
 import { PostHog } from 'posthog-node';
-import { conversational_ai_prompt_generator, detect_if_language_is_english_prompt, final_11labs_prompt, style_extractor_agent_prompt, translate_prompt } from "./prompts";
+import { detect_if_language_is_english_prompt, final_11labs_prompt, style_extractor_agent_prompt, translate_prompt } from "./prompts";
 import { ElevenLabsClient } from "elevenlabs";
 import { addPersona } from "./database";
 import { Persona } from "./types";
 import ISO6391 from 'iso-639-1';
-
-const openai = new OpenAI();
 
 const posthog = new PostHog(
     'phc_P0zmNW1JeorIbK4AMcUts2c3H1ZsozsRxKvZcYnklL5',
     { host: 'https://eu.i.posthog.com' }
 );
 
-async function openaiCompletion(prompt: string, userMessage: string): Promise<string> {
+async function openaiCompletion(prompt: string, userMessage: string, apiKey: string): Promise<string> {
+    const openai = new OpenAI({ apiKey });
     const startTime = Date.now();
     const status = 200;
     let completion;
@@ -87,6 +86,8 @@ export async function createVirtualClone(formData: {
     name: string;
     description: string;
     file: File;
+    elevenLabsKey: string;
+    openAiKey: string;
 }) {
     if (!formData.file) {
         console.error("Cannot create voice - no file provided")
@@ -96,13 +97,13 @@ export async function createVirtualClone(formData: {
     const person_name = formData.name;
     
     // Start voice creation early and let it run in parallel
-    const voiceIDPromise = addVoice(formData.file, person_name);
+    const voiceIDPromise = addVoice(formData.file, person_name, formData.elevenLabsKey);
 
-    const recognized_language = await openaiCompletion(detect_if_language_is_english_prompt, formData.description);
+    const recognized_language = await openaiCompletion(detect_if_language_is_english_prompt, formData.description, formData.openAiKey);
 
     let style_extractor_prompt = style_extractor_agent_prompt.replaceAll('{person_name}', person_name);
     //let conv_ai_prompt_gen_prompt = conversational_ai_prompt_generator;
-    let final_prompt = final_11labs_prompt.replaceAll('{person_name}', person_name).replaceAll('{language}', recognized_language);
+    const final_prompt = final_11labs_prompt.replaceAll('{person_name}', person_name).replaceAll('{language}', recognized_language);
     let init_message = `Hello, I am ${person_name}. It's really nice to see you again!`;
 
     const languageCode = convertToLanguageCode(recognized_language);
@@ -112,10 +113,10 @@ export async function createVirtualClone(formData: {
 
         const tr_prompt = translate_prompt.replaceAll("{language}", recognized_language);
         [style_extractor_prompt, init_message] = await Promise.all([
-            openaiCompletion(tr_prompt, style_extractor_prompt),
-            //openaiCompletion(tr_prompt, conv_ai_prompt_gen_prompt),
-            // openaiCompletion(tr_prompt, final_prompt),
-            openaiCompletion(tr_prompt, init_message)
+            openaiCompletion(tr_prompt, style_extractor_prompt, formData.openAiKey),
+            //openaiCompletion(tr_prompt, conv_ai_prompt_gen_prompt, formData.openAiKey),
+            // openaiCompletion(tr_prompt, final_prompt, formData.openAiKey),
+            openaiCompletion(tr_prompt, init_message, formData.openAiKey)
         ]);
 
         console.log(`\n\nTranslated text:${style_extractor_prompt}`)
@@ -125,14 +126,14 @@ export async function createVirtualClone(formData: {
     }
 
     // Run the OpenAI operations sequentially since they depend on each other
-    const extractedData = await openaiCompletion(style_extractor_prompt, formData.description);
-    //const prompt = await openaiCompletion(conv_ai_prompt_gen_prompt, extractedData);
+    const extractedData = await openaiCompletion(style_extractor_prompt, formData.description, formData.openAiKey);
+    //const prompt = await openaiCompletion(conv_ai_prompt_gen_prompt, extractedData, formData.openAiKey);
     
     const system_prompt = `${final_prompt}\n${extractedData}`;
 
     // Wait for both voice creation and agent creation to complete
     const voice_id = await voiceIDPromise;//'0JYdul3VlZWMx8Zex8L4';//
-    const agent_id = await createAgent(system_prompt, init_message, voice_id, person_name, languageCode);
+    const agent_id = await createAgent(system_prompt, init_message, voice_id, person_name, languageCode, formData.elevenLabsKey);
 
     const uuid = crypto.randomUUID();
     console.log("Finished crafting persona ", uuid);
@@ -154,18 +155,13 @@ export async function createVirtualClone(formData: {
     return uuid;
 }
 
-async function addVoice(file: File, voiceName: string): Promise<string> {
+async function addVoice(file: File, voiceName: string, apiKey: string): Promise<string> {
 
-    deleteVoices();
+    deleteVoices(apiKey);
     
     console.log("Adding new voice...")
 
-    const apiKey = process.env.XI_API_KEY
-    if (!apiKey) {
-        throw Error('XI_API_KEY is not set')
-    }
-
-    const client = new ElevenLabsClient({ apiKey: apiKey });
+    const client = new ElevenLabsClient({ apiKey });
     
     try {
         const response = await client.voices.add({
@@ -185,15 +181,10 @@ async function addVoice(file: File, voiceName: string): Promise<string> {
     }
 }
 
-async function deleteVoices(): Promise<void> {
+async function deleteVoices(apiKey: string): Promise<void> {
     console.log("Checking voice count...")
 
-    const apiKey = process.env.XI_API_KEY
-    if (!apiKey) {
-        throw Error('XI_API_KEY is not set')
-    }
-
-    const client = new ElevenLabsClient({ apiKey: apiKey });
+    const client = new ElevenLabsClient({ apiKey });
     const voices = await client.voices.getAll();
 
     console.log(`Current voice count: ${voices.voices.length}`);
@@ -218,15 +209,17 @@ async function deleteVoices(): Promise<void> {
 // Example usage:
 // const voiceId = await addVoice(fileObject, "Custom Voice Name");
 
-async function createAgent(prompt: string, first_message: string, voice_id: string, internal_name: string, language: string = "en") {
+async function createAgent(
+    prompt: string, 
+    first_message: string, 
+    voice_id: string, 
+    internal_name: string, 
+    language: string = "en",
+    apiKey: string
+) {
     console.log("Adding new agent...")
 
-    const apiKey = process.env.XI_API_KEY
-    if (!apiKey) {
-        throw Error('XI_API_KEY is not set')
-    }
-
-    const client = new ElevenLabsClient({ apiKey: apiKey });
+    const client = new ElevenLabsClient({ apiKey });
     const res = await client.conversationalAi.createAgent({
         conversation_config: {
             agent: {
@@ -251,14 +244,11 @@ async function createAgent(prompt: string, first_message: string, voice_id: stri
     return res.agent_id;
 }
 
-export async function getSignedUrl(agent_id: string) {
+export async function getSignedUrl(agent_id: string, apiKey: string) {
     if (!agent_id) {
         throw Error('AGENT_ID is not set')
     }
-    const apiKey = process.env.XI_API_KEY
-    if (!apiKey) {
-        throw Error('XI_API_KEY is not set')
-    }
+
     try {
         const response = await fetch(
             `https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id=${agent_id}`,
@@ -271,6 +261,7 @@ export async function getSignedUrl(agent_id: string) {
         );
 
         if (!response.ok) {
+            console.log('Failed to get signed URL:', response.statusText);
             throw new Error('Failed to get signed URL');
         }
 

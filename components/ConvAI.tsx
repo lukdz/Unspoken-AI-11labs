@@ -23,14 +23,22 @@ export function ConvAI({ persona }: { persona: Persona }) {
     const [conversation, setConversation] = useState<Conversation | null>(null)
     const [isConnected, setIsConnected] = useState(false)
     const [isSpeaking, setIsSpeaking] = useState(false)
+    const [elevenLabsKey, setElevenLabsKey] = useState('')
+    const [keyError, setKeyError] = useState(false)
 
     async function startConversation() {
+        if (!elevenLabsKey) {
+            setKeyError(true)
+            return
+        }
+        setKeyError(false)
+
         const hasPermission = await requestMicrophonePermission()
         if (!hasPermission) {
             alert("No permission")
             return;
         }
-        const signedUrl = await getSignedUrl(persona.agent_id)
+        const signedUrl = await getSignedUrl(persona.agent_id, elevenLabsKey)
         const conversation = await Conversation.startSession({
             signedUrl: signedUrl,
             onConnect: () => {
@@ -80,6 +88,17 @@ export function ConvAI({ persona }: { persona: Persona }) {
                             isConnected ? 'orb-active' : 'orb-inactive')}
                         ></div>
 
+                        <div className="w-full relative px-4">
+                            <p className="mb-2 text-gray-700">ElevenLabs API Key</p>
+                            <input
+                                type="password" 
+                                placeholder="Enter your ElevenLabs API key"
+                                className={`w-full p-2 border rounded-md ${keyError ? 'border-red-500' : ''}`}
+                                value={elevenLabsKey}
+                                onChange={(e) => setElevenLabsKey(e.target.value)}
+                            />
+                            {keyError && <div className="text-red-500 text-sm mt-1">Please enter your ElevenLabs API key</div>}
+                        </div>
 
                         <Button
                             variant={'outline'}
